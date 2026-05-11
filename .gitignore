@@ -1,0 +1,49 @@
+# ===== OS =====
+.DS_Store
+Thumbs.db
+
+# ===== Editors / IDEs =====
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# ===== Logs =====
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ===== Environment =====
+.env
+.env.local
+.env.*.local
+
+# ===== Java / Maven (backend) =====
+backend/target/
+**/target/
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+hs_err_pid*
+.mvn/
+!.mvn/wrapper/maven-wrapper.jar
+
+# ===== Node / React (frontend) =====
+node_modules/
+frontend/build/
+frontend/coverage/
+.pnp
+.pnp.js
+
+# ===== Misc =====
+*.tmp
+*.swp
+*.bak
