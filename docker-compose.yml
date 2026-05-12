@@ -1,0 +1,76 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: code-arena-mysql
+    restart: unless-stopped
+
+    environment:
+      MYSQL_DATABASE: codearena
+      MYSQL_USER: codearena
+      MYSQL_PASSWORD: codearena
+      MYSQL_ROOT_PASSWORD: codearena-root
+
+    ports:
+      - "3306:3306"
+
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "mysqladmin ping -h 127.0.0.1 -ucodearena -pcodearena --silent"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+
+    container_name: code-arena-backend
+    restart: unless-stopped
+
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/codearena?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: codearena
+      SPRING_DATASOURCE_PASSWORD: codearena
+
+      APP_CORS_ALLOWED_ORIGINS: http://localhost:3000
+
+      JUDGE0_API_KEY: ${JUDGE0_API_KEY:-}
+      JUDGE0_URL: ${JUDGE0_URL:-https://judge0-ce.p.rapidapi.com}
+      JUDGE0_HOST: ${JUDGE0_HOST:-judge0-ce.p.rapidapi.com}
+
+      JAVA_TOOL_OPTIONS: "-Xms256m -Xmx512m"
+
+    ports:
+      - "8080:8080"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        REACT_APP_API_BASE_URL: http://localhost:8080/api
+
+    container_name: code-arena-frontend
+    restart: unless-stopped
+
+    depends_on:
+      - backend
+
+    ports:
+      - "3000:80"
+
+volumes:
+  mysql-data:

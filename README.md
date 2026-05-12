@@ -16,6 +16,27 @@ mvn spring-boot:run
 
 The server starts on http://localhost:8080.
 
+By default the backend uses an in-memory H2 database for local development.
+The Docker setup uses MySQL with a persistent Docker volume.
+
+## Docker
+
+Run the full stack with MySQL:
+
+```bash
+docker compose up --build
+```
+
+Services:
+
+- Frontend: http://localhost:3000
+- Backend: http://localhost:8080
+- MySQL: localhost:3306 (`codearena` / `codearena`)
+
+The MySQL data is stored in the `mysql-data` Docker volume. The backend runs with
+the `docker` Spring profile, creates/updates tables in MySQL, and seeds the problem
+bank when the database is empty.
+
 ### Judge0 configuration
 
 Sign up at https://rapidapi.com/judge0-official/api/judge0-ce/ and grab a free API key,

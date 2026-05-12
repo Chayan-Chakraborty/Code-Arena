@@ -112,9 +112,9 @@ public class ProblemBankSeeder implements ApplicationRunner {
     private GeneratedProblem generateTwoSum(int variant) {
         Random rnd = randomFor(1, variant);
         List<SeedTestCase> tests = List.of(
-                new SeedTestCase(twoSumInput(new int[] { 2 + variant, 7, 11, 15 + variant }, 9 + variant),
+                new SeedTestCase(twoSumInput(new int[] { 2 + variant, 7, 11 + variant, 15 + variant }, 9 + variant),
                         "0 1", true),
-                new SeedTestCase(twoSumInput(new int[] { 3, 2 + variant, 4 + variant }, 6 + (2 * variant)),
+                new SeedTestCase(twoSumInput(new int[] { 1, 2 + variant, 4 + variant }, 6 + (2 * variant)),
                         "1 2", true),
                 new SeedTestCase(twoSumInput(new int[] { variant, variant }, variant * 2), "0 1", false),
                 twoSumUniqueCase(rnd, 6 + (variant % 4), -12, 18, false),
@@ -581,7 +581,7 @@ public class ProblemBankSeeder implements ApplicationRunner {
                 arrayArrayResultCase(new int[] { 30, 40, 50, 60 }, true, this::dailyTemperatures),
                 arrayArrayResultCase(new int[] { 30, 60, 90 }, false, this::dailyTemperatures),
                 arrayArrayResultCase(new int[] { 90, 80, 70, 60 }, false, this::dailyTemperatures),
-                arrayArrayResultCase(new int[] { 65, 65, 66, 64, 70, 68, 72 + variant }, false,
+                arrayArrayResultCase(new int[] { 65, 65, 66, 64, 70, 68, 72 + (variant % 20) }, false,
                         this::dailyTemperatures));
 
         return problem("Daily Temperatures " + pad(variant),
