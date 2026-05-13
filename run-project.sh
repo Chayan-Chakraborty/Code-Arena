@@ -1,10 +1,19 @@
 #!/usr/bin/env bash
 
+# Run Code Arena locally WITHOUT Docker.
+# Requires: JDK 17+, Maven, Node 18+, npm.
+#
+# Backend  -> http://localhost:${BACKEND_PORT:-8080}  (in-memory H2 DB)
+# Frontend -> http://localhost:${FRONTEND_PORT:-3000}
+
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BACKEND_DIR="$ROOT_DIR/backend"
 FRONTEND_DIR="$ROOT_DIR/frontend"
+
+BACKEND_PORT="${BACKEND_PORT:-8080}"
+FRONTEND_PORT="${FRONTEND_PORT:-3000}"
 
 BACKEND_PID=""
 FRONTEND_PID=""
@@ -35,7 +44,9 @@ cleanup() {
 
 trap cleanup EXIT INT TERM
 
+require_command java
 require_command mvn
+require_command node
 require_command npm
 
 if [[ ! -d "$BACKEND_DIR" || ! -d "$FRONTEND_DIR" ]]; then
@@ -48,18 +59,28 @@ if [[ ! -d "$FRONTEND_DIR/node_modules" ]]; then
   (cd "$FRONTEND_DIR" && npm install)
 fi
 
-echo "Starting backend on http://localhost:8080 ..."
-(cd "$BACKEND_DIR" && mvn spring-boot:run) &
+echo "Starting backend on http://localhost:${BACKEND_PORT} ..."
+(
+  cd "$BACKEND_DIR"
+  SERVER_PORT="$BACKEND_PORT" mvn -q spring-boot:run \
+    -Dspring-boot.run.arguments="--server.port=${BACKEND_PORT}"
+) &
 BACKEND_PID=$!
 
-echo "Starting frontend on http://localhost:3000 ..."
-(cd "$FRONTEND_DIR" && npm start) &
+echo "Starting frontend on http://localhost:${FRONTEND_PORT} ..."
+(
+  cd "$FRONTEND_DIR"
+  PORT="$FRONTEND_PORT" \
+  REACT_APP_API_BASE_URL="http://localhost:${BACKEND_PORT}/api" \
+  BROWSER=none \
+  npm start
+) &
 FRONTEND_PID=$!
 
 echo
-echo "Code Arena is starting up."
-echo "Frontend: http://localhost:3000"
-echo "Backend:  http://localhost:8080"
+echo "Code Arena is starting up (no Docker)."
+echo "Frontend: http://localhost:${FRONTEND_PORT}"
+echo "Backend:  http://localhost:${BACKEND_PORT}"
 echo "Press Ctrl+C to stop both services."
 echo
 

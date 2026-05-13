@@ -11,7 +11,7 @@ services:
       MYSQL_ROOT_PASSWORD: codearena-root
 
     ports:
-      - "3307:3306"
+      - "${MYSQL_HOST_PORT:-3307}:3306"
 
     volumes:
       - mysql-data:/var/lib/mysql
@@ -54,14 +54,14 @@ services:
       JAVA_TOOL_OPTIONS: "-Xms256m -Xmx512m"
 
     ports:
-      - "8081:8080"
+      - "${BACKEND_HOST_PORT:-8081}:8080"
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        REACT_APP_API_BASE_URL: http://localhost:8081/api
+        REACT_APP_API_BASE_URL: ${REACT_APP_API_BASE_URL:-http://localhost:8081/api}
 
     container_name: code-arena-frontend
     restart: unless-stopped
@@ -70,7 +70,7 @@ services:
       - backend
 
     ports:
-      - "3000:80"
+      - "${FRONTEND_HOST_PORT:-3000}:80"
 
 volumes:
   mysql-data:
