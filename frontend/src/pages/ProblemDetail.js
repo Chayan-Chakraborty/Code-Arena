@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import Editor from "@monaco-editor/react";
 import api from "../api/axios";
 import { useAuth } from "../context/AuthContext";
@@ -8,6 +8,14 @@ const DIFF_COLORS = {
     Easy: "text-emerald-400",
     Medium: "text-amber-400",
     Hard: "text-rose-400",
+};
+
+const STATUS_COLOR = {
+    Accepted: "text-emerald-400",
+    "Wrong Answer": "text-rose-400",
+    TLE: "text-amber-400",
+    "Runtime Error": "text-rose-400",
+    "Compilation Error": "text-rose-400",
 };
 
 export default function ProblemDetail() {
@@ -22,7 +30,22 @@ export default function ProblemDetail() {
     const [runResults, setRunResults] = useState(null);
     const [submitResult, setSubmitResult] = useState(null);
     const [error, setError] = useState("");
-    const [tab, setTab] = useState("run"); // run | submit
+    const [tab, setTab] = useState("run"); // run | submit | submissions
+    const [mySubmissions, setMySubmissions] = useState(null);
+    const [loadingSubs, setLoadingSubs] = useState(false);
+
+    const loadMySubmissions = async () => {
+        if (!user) return;
+        setLoadingSubs(true);
+        try {
+            const { data } = await api.get(`/submissions?problemId=${id}`);
+            setMySubmissions(data || []);
+        } catch (e) {
+            setError(e.response?.data?.error || e.message);
+        } finally {
+            setLoadingSubs(false);
+        }
+    };
 
     useEffect(() => {
         setLoading(true);
@@ -84,6 +107,7 @@ export default function ProblemDetail() {
                 language: "java",
             });
             setSubmitResult(data);
+            loadMySubmissions();
         } catch (e) {
             setError(e.response?.data?.error || e.message);
         } finally {
@@ -166,6 +190,15 @@ export default function ProblemDetail() {
                                 onClick={() => setTab("submit")}
                                 className={`px-3 py-1 rounded text-sm ${tab === "submit" ? "bg-slate-700" : "bg-slate-800"}`}
                             >Submit Result</button>
+                            {user && (
+                                <button
+                                    onClick={() => {
+                                        setTab("submissions");
+                                        if (mySubmissions === null) loadMySubmissions();
+                                    }}
+                                    className={`px-3 py-1 rounded text-sm ${tab === "submissions" ? "bg-slate-700" : "bg-slate-800"}`}
+                                >My Submissions</button>
+                            )}
                         </div>
 
                         {error && <div className="text-red-400 mb-3">{error}</div>}
@@ -175,6 +208,13 @@ export default function ProblemDetail() {
                         )}
                         {tab === "submit" && (
                             <SubmitOutput submitting={submitting} result={submitResult} />
+                        )}
+                        {tab === "submissions" && (
+                            <MySubmissions
+                                loading={loadingSubs}
+                                submissions={mySubmissions}
+                                onRefresh={loadMySubmissions}
+                            />
                         )}
                     </div>
                 </div>
@@ -254,6 +294,55 @@ function SubmitOutput({ submitting, result }) {
                     </div>
                 );
             })()}
+        </div>
+    );
+}
+
+function MySubmissions({ loading, submissions, onRefresh }) {
+    if (loading) return <div className="text-slate-400">Loading submissions...</div>;
+    if (submissions === null) return <div className="text-slate-500 text-sm">Loading...</div>;
+    if (submissions.length === 0) {
+        return (
+            <div className="text-slate-400 text-sm">
+                No submissions yet for this problem.{" "}
+                <button onClick={onRefresh} className="text-emerald-400 hover:underline">Refresh</button>
+            </div>
+        );
+    }
+    return (
+        <div>
+            <div className="flex justify-between items-center mb-2">
+                <span className="text-sm text-slate-400">{submissions.length} submission{submissions.length === 1 ? "" : "s"}</span>
+                <button onClick={onRefresh} className="text-emerald-400 hover:underline text-xs">Refresh</button>
+            </div>
+            <table className="w-full text-sm">
+                <thead className="text-slate-400 text-left">
+                    <tr>
+                        <th className="py-1 pr-2">Status</th>
+                        <th className="py-1 pr-2">Time</th>
+                        <th className="py-1 pr-2">Submitted</th>
+                        <th className="py-1"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {submissions.map((s) => (
+                        <tr key={s.id} className="border-t border-slate-700">
+                            <td className={`py-1 pr-2 font-semibold ${STATUS_COLOR[s.status] || "text-slate-300"}`}>
+                                {s.status}
+                            </td>
+                            <td className="py-1 pr-2 text-slate-400">
+                                {s.executionTime != null ? `${Number(s.executionTime).toFixed(3)}s` : "—"}
+                            </td>
+                            <td className="py-1 pr-2 text-slate-400">
+                                {s.createdAt ? new Date(s.createdAt).toLocaleString() : "—"}
+                            </td>
+                            <td className="py-1">
+                                <Link to={`/submissions/${s.id}`} className="text-emerald-400 hover:underline">View code</Link>
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
         </div>
     );
 }

@@ -77,6 +77,18 @@ public class SubmissionService {
         return submissionRepository.findByProblemIdOrderByCreatedAtDesc(problemId);
     }
 
+    public List<Submission> findByUser(Long userId) {
+        return submissionRepository.findByUserIdOrderByCreatedAtDesc(userId);
+    }
+
+    public List<Submission> findByUserAndProblem(Long userId, Long problemId) {
+        return submissionRepository.findByUserIdAndProblemIdOrderByCreatedAtDesc(userId, problemId);
+    }
+
+    public Submission findById(Long id) {
+        return submissionRepository.findById(id).orElse(null);
+    }
+
     private TestResult executeOne(String code, TestCase tc) {
         ExecutionResult ex = executor.execute(code, tc.getInput());
         String actual;

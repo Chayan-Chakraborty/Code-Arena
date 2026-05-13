@@ -13,6 +13,7 @@ export default function Navbar() {
             </Link>
             <div className="flex gap-4 items-center">
                 <Link to="/problems" className="hover:text-emerald-400">Problems</Link>
+                {user && <Link to="/submissions" className="hover:text-emerald-400">Submissions</Link>}
                 {user && <Link to="/dashboard" className="hover:text-emerald-400">Dashboard</Link>}
                 {user ? (
                     <>

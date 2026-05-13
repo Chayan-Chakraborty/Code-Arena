@@ -8,6 +8,8 @@ import Signup from "./pages/Signup";
 import Problems from "./pages/Problems";
 import ProblemDetail from "./pages/ProblemDetail";
 import Dashboard from "./pages/Dashboard";
+import Submissions from "./pages/Submissions";
+import SubmissionDetail from "./pages/SubmissionDetail";
 
 export default function App() {
     return (
@@ -21,6 +23,8 @@ export default function App() {
                     <Route path="/problems" element={<Problems />} />
                     <Route path="/problems/:id" element={<ProblemDetail />} />
                     <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/submissions" element={<Submissions />} />
+                    <Route path="/submissions/:id" element={<SubmissionDetail />} />
                 </Routes>
             </BrowserRouter>
         </AuthProvider>

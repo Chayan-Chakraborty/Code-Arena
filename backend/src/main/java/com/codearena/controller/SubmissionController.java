@@ -40,9 +40,32 @@ public class SubmissionController {
         }
     }
 
-    @GetMapping("/submissions/{problemId}")
-    public List<Submission> byProblem(@PathVariable Long problemId) {
-        return submissionService.findByProblem(problemId);
+    @GetMapping("/submissions")
+    public ResponseEntity<?> mySubmissions(@RequestParam(required = false) Long problemId) {
+        Long userId = currentUserId();
+        if (userId == null) {
+            return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
+        }
+        List<Submission> subs = problemId != null
+                ? submissionService.findByUserAndProblem(userId, problemId)
+                : submissionService.findByUser(userId);
+        return ResponseEntity.ok(subs);
+    }
+
+    @GetMapping("/submissions/{id}")
+    public ResponseEntity<?> submissionDetail(@PathVariable Long id) {
+        Long userId = currentUserId();
+        if (userId == null) {
+            return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
+        }
+        Submission sub = submissionService.findById(id);
+        if (sub == null) {
+            return ResponseEntity.status(404).body(Map.of("error", "Not found"));
+        }
+        if (!userId.equals(sub.getUserId())) {
+            return ResponseEntity.status(403).body(Map.of("error", "Forbidden"));
+        }
+        return ResponseEntity.ok(sub);
     }
 
     private Long currentUserId() {
