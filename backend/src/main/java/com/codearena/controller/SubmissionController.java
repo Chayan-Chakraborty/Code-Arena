@@ -30,6 +30,15 @@ public class SubmissionController {
         }
     }
 
+    @PostMapping("/run-custom")
+    public ResponseEntity<?> runCustom(@RequestBody CustomRunRequest req) {
+        try {
+            return ResponseEntity.ok(submissionService.runCustom(req));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
     @PostMapping("/submit")
     public ResponseEntity<?> submit(@RequestBody SubmitRequest req) {
         try {

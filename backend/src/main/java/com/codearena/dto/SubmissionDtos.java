@@ -16,6 +16,18 @@ public class SubmissionDtos {
         public String language; // java
     }
 
+    public static class CustomTestCase {
+        public String input;
+        public String expectedOutput; // optional
+    }
+
+    public static class CustomRunRequest {
+        public Long problemId;
+        public String code;
+        public String language; // java
+        public List<CustomTestCase> testCases;
+    }
+
     public static class TestResult {
         public String input;
         public String expectedOutput;

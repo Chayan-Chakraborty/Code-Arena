@@ -30,9 +30,12 @@ export default function ProblemDetail() {
     const [runResults, setRunResults] = useState(null);
     const [submitResult, setSubmitResult] = useState(null);
     const [error, setError] = useState("");
-    const [tab, setTab] = useState("run"); // run | submit | submissions
+    const [tab, setTab] = useState("run"); // run | custom | submit | submissions
     const [mySubmissions, setMySubmissions] = useState(null);
     const [loadingSubs, setLoadingSubs] = useState(false);
+    const [customTests, setCustomTests] = useState([{ input: "", expectedOutput: "" }]);
+    const [customResults, setCustomResults] = useState(null);
+    const [runningCustom, setRunningCustom] = useState(false);
 
     const loadMySubmissions = async () => {
         if (!user) return;
@@ -85,6 +88,49 @@ export default function ProblemDetail() {
         runResults.length > 0 &&
         runResults.every((result) => result.passed) &&
         lastRunCode === code;
+
+    const onRunCustom = async () => {
+        const cleaned = customTests
+            .map((t) => ({
+                input: t.input ?? "",
+                expectedOutput: t.expectedOutput ?? "",
+            }))
+            .filter((t) => t.input.trim() !== "" || t.expectedOutput.trim() !== "");
+        if (cleaned.length === 0) {
+            setError("Add at least one custom test case with input.");
+            setTab("custom");
+            return;
+        }
+        setRunningCustom(true);
+        setError("");
+        setCustomResults(null);
+        setTab("custom");
+        try {
+            const { data } = await api.post("/run-custom", {
+                problemId: Number(id),
+                code,
+                language: "java",
+                testCases: cleaned,
+            });
+            setCustomResults(data.results || []);
+        } catch (e) {
+            setError(e.response?.data?.error || e.message);
+        } finally {
+            setRunningCustom(false);
+        }
+    };
+
+    const updateCustomTest = (idx, field, value) => {
+        setCustomTests((prev) =>
+            prev.map((t, i) => (i === idx ? { ...t, [field]: value } : t))
+        );
+    };
+    const addCustomTest = () =>
+        setCustomTests((prev) => [...prev, { input: "", expectedOutput: "" }]);
+    const removeCustomTest = (idx) =>
+        setCustomTests((prev) =>
+            prev.length === 1 ? prev : prev.filter((_, i) => i !== idx)
+        );
 
     const onSubmit = async () => {
         if (!user) {
@@ -187,6 +233,10 @@ export default function ProblemDetail() {
                                 className={`px-3 py-1 rounded text-sm ${tab === "run" ? "bg-slate-700" : "bg-slate-800"}`}
                             >Run Output</button>
                             <button
+                                onClick={() => setTab("custom")}
+                                className={`px-3 py-1 rounded text-sm ${tab === "custom" ? "bg-slate-700" : "bg-slate-800"}`}
+                            >Custom Tests</button>
+                            <button
                                 onClick={() => setTab("submit")}
                                 className={`px-3 py-1 rounded text-sm ${tab === "submit" ? "bg-slate-700" : "bg-slate-800"}`}
                             >Submit Result</button>
@@ -205,6 +255,18 @@ export default function ProblemDetail() {
 
                         {tab === "run" && (
                             <RunOutput running={running} results={runResults} />
+                        )}
+                        {tab === "custom" && (
+                            <CustomTests
+                                tests={customTests}
+                                results={customResults}
+                                running={runningCustom}
+                                disabled={running || submitting}
+                                onChange={updateCustomTest}
+                                onAdd={addCustomTest}
+                                onRemove={removeCustomTest}
+                                onRun={onRunCustom}
+                            />
                         )}
                         {tab === "submit" && (
                             <SubmitOutput submitting={submitting} result={submitResult} />
@@ -346,3 +408,90 @@ function MySubmissions({ loading, submissions, onRefresh }) {
         </div>
     );
 }
+
+function CustomTests({ tests, results, running, disabled, onChange, onAdd, onRemove, onRun }) {
+    return (
+        <div className="space-y-3">
+            <div className="flex items-center justify-between">
+                <span className="text-sm text-slate-400">
+                    Add your own test cases. Expected output is optional — leave it blank to just see your program's output.
+                </span>
+                <div className="flex gap-2">
+                    <button
+                        onClick={onAdd}
+                        className="bg-slate-700 hover:bg-slate-600 px-3 py-1 rounded text-xs"
+                    >+ Add Case</button>
+                    <button
+                        onClick={onRun}
+                        disabled={running || disabled}
+                        className="bg-emerald-600 hover:bg-emerald-700 px-3 py-1 rounded text-xs font-semibold disabled:opacity-50"
+                    >{running ? "Running..." : "Run Custom"}</button>
+                </div>
+            </div>
+
+            <div className="space-y-3">
+                {tests.map((t, i) => (
+                    <div key={i} className="p-3 rounded border border-slate-700 bg-slate-800/40">
+                        <div className="flex items-center justify-between mb-2">
+                            <span className="text-sm font-semibold text-slate-300">Case {i + 1}</span>
+                            <button
+                                onClick={() => onRemove(i)}
+                                disabled={tests.length === 1}
+                                className="text-xs text-rose-400 hover:underline disabled:opacity-30 disabled:no-underline"
+                            >Remove</button>
+                        </div>
+                        <label className="text-xs text-slate-400">Input</label>
+                        <textarea
+                            value={t.input}
+                            onChange={(e) => onChange(i, "input", e.target.value)}
+                            rows={3}
+                            placeholder="stdin passed to your program"
+                            className="w-full mt-1 mb-2 bg-slate-900 border border-slate-700 rounded p-2 text-sm font-mono"
+                        />
+                        <label className="text-xs text-slate-400">Expected Output (optional)</label>
+                        <textarea
+                            value={t.expectedOutput}
+                            onChange={(e) => onChange(i, "expectedOutput", e.target.value)}
+                            rows={2}
+                            placeholder="leave blank to skip comparison"
+                            className="w-full mt-1 bg-slate-900 border border-slate-700 rounded p-2 text-sm font-mono"
+                        />
+                    </div>
+                ))}
+            </div>
+
+            {results && (
+                <div className="space-y-3 pt-2">
+                    <div className="text-sm font-semibold text-slate-300">Results</div>
+                    {results.length === 0 && (
+                        <div className="text-slate-500 text-sm">No results.</div>
+                    )}
+                    {results.map((r, i) => (
+                        <div
+                            key={i}
+                            className={`p-3 rounded border ${r.passed ? "border-emerald-600 bg-emerald-900/20" : "border-rose-600 bg-rose-900/20"}`}
+                        >
+                            <div className="flex justify-between mb-1">
+                                <span className="font-semibold">Case {i + 1}</span>
+                                <span className={r.passed ? "text-emerald-400" : "text-rose-400"}>
+                                    {r.passed ? `✓ ${r.status}` : `✗ ${r.status}`}
+                                </span>
+                            </div>
+                            <div className="text-xs text-slate-400">Input</div>
+                            <pre className="text-sm bg-slate-800 p-2 rounded whitespace-pre-wrap">{r.input}</pre>
+                            {r.expectedOutput !== "" && (
+                                <>
+                                    <div className="text-xs text-slate-400 mt-2">Expected</div>
+                                    <pre className="text-sm bg-slate-800 p-2 rounded whitespace-pre-wrap">{r.expectedOutput}</pre>
+                                </>
+                            )}
+                            <div className="text-xs text-slate-400 mt-2">Actual</div>
+                            <pre className="text-sm bg-slate-800 p-2 rounded whitespace-pre-wrap">{r.actualOutput}</pre>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+

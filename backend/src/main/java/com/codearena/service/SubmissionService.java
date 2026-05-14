@@ -33,6 +33,46 @@ public class SubmissionService {
         return new RunResponse(results);
     }
 
+    public RunResponse runCustom(CustomRunRequest req) {
+        List<TestResult> results = new ArrayList<>();
+        if (req.testCases == null || req.testCases.isEmpty()) {
+            return new RunResponse(results);
+        }
+        for (CustomTestCase ctc : req.testCases) {
+            if (ctc == null)
+                continue;
+            String input = ctc.input == null ? "" : ctc.input;
+            String expected = ctc.expectedOutput;
+            boolean hasExpected = expected != null && !expected.isBlank();
+
+            ExecutionResult ex = executor.execute(req.code, input);
+            String actual;
+            if ("Accepted".equals(ex.status)) {
+                actual = ex.stdout == null ? "" : ex.stdout;
+            } else {
+                actual = ex.error != null && !ex.error.isBlank() ? ex.error
+                        : (ex.stdout == null ? "" : ex.stdout);
+            }
+
+            boolean executedOk = "Accepted".equals(ex.status);
+            boolean passed;
+            String status;
+            if (!executedOk) {
+                passed = false;
+                status = ex.status;
+            } else if (hasExpected) {
+                passed = normalize(actual).equals(normalize(expected));
+                status = passed ? "Passed" : "Wrong Answer";
+            } else {
+                // No expected output provided — just show the result
+                passed = true;
+                status = "Executed";
+            }
+            results.add(new TestResult(input, hasExpected ? expected : "", actual, passed, status, ex.time));
+        }
+        return new RunResponse(results);
+    }
+
     public SubmitResponse submit(SubmitRequest req, Long userId) {
         List<TestCase> hidden = problemService.hiddenTestCases(req.problemId);
         List<TestResult> results = new ArrayList<>();
