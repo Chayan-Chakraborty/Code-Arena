@@ -9,20 +9,24 @@ export function AuthProvider({ children }) {
         const token = localStorage.getItem("token");
         const username = localStorage.getItem("username");
         const userId = localStorage.getItem("userId");
-        if (token && username) setUser({ token, username, userId });
+        const role = localStorage.getItem("role") || "USER";
+        if (token && username) setUser({ token, username, userId, role });
     }, []);
 
-    const login = ({ token, username, userId }) => {
+    const login = ({ token, username, userId, role }) => {
+        const resolvedRole = role || "USER";
         localStorage.setItem("token", token);
         localStorage.setItem("username", username);
         localStorage.setItem("userId", userId);
-        setUser({ token, username, userId });
+        localStorage.setItem("role", resolvedRole);
+        setUser({ token, username, userId, role: resolvedRole });
     };
 
     const logout = () => {
         localStorage.removeItem("token");
         localStorage.removeItem("username");
         localStorage.removeItem("userId");
+        localStorage.removeItem("role");
         setUser(null);
     };
 

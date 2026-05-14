@@ -36,6 +36,10 @@ export default function ProblemDetail() {
     const [customTests, setCustomTests] = useState([{ input: "", expectedOutput: "" }]);
     const [customResults, setCustomResults] = useState(null);
     const [runningCustom, setRunningCustom] = useState(false);
+    const [problemTestCases, setProblemTestCases] = useState(null);
+    const [loadingTestCases, setLoadingTestCases] = useState(false);
+    const [savingTcId, setSavingTcId] = useState(null);
+    const [newTestCase, setNewTestCase] = useState({ input: "", expectedOutput: "", isSample: false });
 
     const loadMySubmissions = async () => {
         if (!user) return;
@@ -132,6 +136,82 @@ export default function ProblemDetail() {
             prev.length === 1 ? prev : prev.filter((_, i) => i !== idx)
         );
 
+    const loadProblemTestCases = async () => {
+        setLoadingTestCases(true);
+        setError("");
+        try {
+            const { data } = await api.get(`/problems/${id}/testcases`);
+            setProblemTestCases(data || []);
+        } catch (e) {
+            setError(e.response?.data?.error || e.message);
+        } finally {
+            setLoadingTestCases(false);
+        }
+    };
+
+    const onProblemTcChange = (tcId, field, value) => {
+        setProblemTestCases((prev) =>
+            prev ? prev.map((t) => (t.id === tcId ? { ...t, [field]: value } : t)) : prev
+        );
+    };
+
+    const onProblemTcSave = async (tc) => {
+        if (!user) {
+            setError("Please login to manage test cases.");
+            return;
+        }
+        setSavingTcId(tc.id);
+        setError("");
+        try {
+            const { data } = await api.put(`/problems/testcases/${tc.id}`, {
+                input: tc.input,
+                expectedOutput: tc.expectedOutput,
+                isSample: !!tc.isSample,
+            });
+            setProblemTestCases((prev) =>
+                prev ? prev.map((t) => (t.id === tc.id ? data : t)) : prev
+            );
+        } catch (e) {
+            setError(e.response?.data?.error || e.message);
+        } finally {
+            setSavingTcId(null);
+        }
+    };
+
+    const onProblemTcDelete = async (tcId) => {
+        if (!user) {
+            setError("Please login to manage test cases.");
+            return;
+        }
+        if (!window.confirm("Delete this test case?")) return;
+        setError("");
+        try {
+            await api.delete(`/problems/testcases/${tcId}`);
+            setProblemTestCases((prev) => (prev ? prev.filter((t) => t.id !== tcId) : prev));
+        } catch (e) {
+            setError(e.response?.data?.error || e.message);
+        }
+    };
+
+    const onProblemTcCreate = async () => {
+        if (!user) {
+            setError("Please login to add test cases.");
+            return;
+        }
+        if (!newTestCase.input.trim() && !newTestCase.expectedOutput.trim()) {
+            setError("Provide input or expected output for the new test case.");
+            return;
+        }
+        setError("");
+        try {
+            const { data } = await api.post(`/problems/${id}/testcases`, newTestCase);
+            setProblemTestCases((prev) => (prev ? [...prev, data] : [data]));
+            setNewTestCase({ input: "", expectedOutput: "", isSample: false });
+        } catch (e) {
+            setError(e.response?.data?.error || e.message);
+        }
+    };
+
     const onSubmit = async () => {
         if (!user) {
             setError("Please login to submit.");
@@ -174,6 +254,11 @@ export default function ProblemDetail() {
                         {problem.difficulty}
                     </span>
                     <span className="text-xs bg-slate-700 px-2 py-1 rounded">{problem.topic}</span>
+                    {problem.status && problem.status !== "APPROVED" && (
+                        <span className={`text-xs px-2 py-1 rounded font-semibold ${problem.status === "PENDING" ? "bg-amber-700/40 text-amber-300" : "bg-rose-800/40 text-rose-300"}`}>
+                            {problem.status}
+                        </span>
+                    )}
                 </div>
 
                 <div className="prose prose-invert max-w-none text-slate-300 whitespace-pre-wrap mb-4">
@@ -240,6 +325,15 @@ export default function ProblemDetail() {
                                 onClick={() => setTab("submit")}
                                 className={`px-3 py-1 rounded text-sm ${tab === "submit" ? "bg-slate-700" : "bg-slate-800"}`}
                             >Submit Result</button>
+                            {user && (user.role === "ADMIN" || (problem && String(problem.createdBy) === String(user.userId) && problem.status === "PENDING")) && (
+                                <button
+                                    onClick={() => {
+                                        setTab("manage");
+                                        if (problemTestCases === null) loadProblemTestCases();
+                                    }}
+                                    className={`px-3 py-1 rounded text-sm ${tab === "manage" ? "bg-slate-700" : "bg-slate-800"}`}
+                                >Manage Tests</button>
+                            )}
                             {user && (
                                 <button
                                     onClick={() => {
@@ -270,6 +364,20 @@ export default function ProblemDetail() {
                         )}
                         {tab === "submit" && (
                             <SubmitOutput submitting={submitting} result={submitResult} />
+                        )}
+                        {tab === "manage" && (
+                            <ManageTestCases
+                                loading={loadingTestCases}
+                                testCases={problemTestCases}
+                                savingId={savingTcId}
+                                newTestCase={newTestCase}
+                                setNewTestCase={setNewTestCase}
+                                onChange={onProblemTcChange}
+                                onSave={onProblemTcSave}
+                                onDelete={onProblemTcDelete}
+                                onCreate={onProblemTcCreate}
+                                onRefresh={loadProblemTestCases}
+                            />
                         )}
                         {tab === "submissions" && (
                             <MySubmissions
@@ -495,3 +603,118 @@ function CustomTests({ tests, results, running, disabled, onChange, onAdd, onRem
     );
 }
 
+
+function ManageTestCases({
+    loading,
+    testCases,
+    savingId,
+    newTestCase,
+    setNewTestCase,
+    onChange,
+    onSave,
+    onDelete,
+    onCreate,
+    onRefresh,
+}) {
+    if (loading && testCases === null) {
+        return <div className="text-slate-400">Loading test cases...</div>;
+    }
+    return (
+        <div className="space-y-4">
+            <div className="flex items-center justify-between">
+                <span className="text-sm text-slate-400">
+                    Add, edit or remove test cases for this problem. Sample cases are shown to everyone; non-sample cases
+                    run on submit.
+                </span>
+                <button
+                    onClick={onRefresh}
+                    className="bg-slate-700 hover:bg-slate-600 px-3 py-1 rounded text-xs"
+                >Refresh</button>
+            </div>
+
+            <div className="p-3 rounded border border-emerald-700 bg-emerald-900/10 space-y-2">
+                <div className="text-sm font-semibold text-emerald-400">New Test Case</div>
+                <label className="text-xs text-slate-400">Input</label>
+                <textarea
+                    value={newTestCase.input}
+                    onChange={(e) => setNewTestCase({ ...newTestCase, input: e.target.value })}
+                    rows={2}
+                    placeholder="stdin"
+                    className="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm font-mono"
+                />
+                <label className="text-xs text-slate-400">Expected Output</label>
+                <textarea
+                    value={newTestCase.expectedOutput}
+                    onChange={(e) => setNewTestCase({ ...newTestCase, expectedOutput: e.target.value })}
+                    rows={2}
+                    placeholder="expected stdout"
+                    className="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm font-mono"
+                />
+                <div className="flex items-center justify-between">
+                    <label className="flex items-center gap-2 text-xs text-slate-300">
+                        <input
+                            type="checkbox"
+                            checked={!!newTestCase.isSample}
+                            onChange={(e) => setNewTestCase({ ...newTestCase, isSample: e.target.checked })}
+                        />
+                        Sample (visible & used by Run)
+                    </label>
+                    <button
+                        onClick={onCreate}
+                        className="bg-emerald-600 hover:bg-emerald-700 px-3 py-1 rounded text-xs font-semibold"
+                    >Add Test Case</button>
+                </div>
+            </div>
+
+            {testCases && testCases.length === 0 && (
+                <div className="text-slate-400 text-sm">No test cases yet.</div>
+            )}
+
+            {testCases && testCases.map((tc, i) => (
+                <div key={tc.id} className="p-3 rounded border border-slate-700 bg-slate-800/40 space-y-2">
+                    <div className="flex items-center justify-between">
+                        <span className="text-sm font-semibold text-slate-300">
+                            #{i + 1} · ID {tc.id}{" "}
+                            <span className={`ml-2 text-xs px-2 py-0.5 rounded ${tc.isSample ? "bg-emerald-700/40 text-emerald-300" : "bg-slate-700 text-slate-300"}`}>
+                                {tc.isSample ? "Sample" : "Hidden"}
+                            </span>
+                        </span>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => onSave(tc)}
+                                disabled={savingId === tc.id}
+                                className="bg-emerald-600 hover:bg-emerald-700 px-3 py-1 rounded text-xs font-semibold disabled:opacity-50"
+                            >{savingId === tc.id ? "Saving..." : "Save"}</button>
+                            <button
+                                onClick={() => onDelete(tc.id)}
+                                className="bg-rose-700 hover:bg-rose-800 px-3 py-1 rounded text-xs"
+                            >Delete</button>
+                        </div>
+                    </div>
+                    <label className="text-xs text-slate-400">Input</label>
+                    <textarea
+                        value={tc.input || ""}
+                        onChange={(e) => onChange(tc.id, "input", e.target.value)}
+                        rows={3}
+                        className="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm font-mono"
+                    />
+                    <label className="text-xs text-slate-400">Expected Output</label>
+                    <textarea
+                        value={tc.expectedOutput || ""}
+                        onChange={(e) => onChange(tc.id, "expectedOutput", e.target.value)}
+                        rows={2}
+                        className="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm font-mono"
+                    />
+                    <label className="flex items-center gap-2 text-xs text-slate-300">
+                        <input
+                            type="checkbox"
+                            checked={!!tc.isSample}
+                            onChange={(e) => onChange(tc.id, "isSample", e.target.checked)}
+                        />
+                        Sample (visible & used by Run)
+                    </label>
+                </div>
+            ))}
+        </div>
+    );
+}

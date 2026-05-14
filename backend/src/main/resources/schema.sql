@@ -7,7 +7,8 @@ CREATE TABLE users (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(80) NOT NULL UNIQUE,
     email VARCHAR(160) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL
+    password VARCHAR(255) NOT NULL,
+    role VARCHAR(20) NOT NULL DEFAULT 'USER'
 );
 
 CREATE TABLE problems (
@@ -19,7 +20,9 @@ CREATE TABLE problems (
     constraints TEXT,
     sample_input TEXT,
     sample_output TEXT,
-    starter_code TEXT
+    starter_code TEXT,
+    status VARCHAR(20) NOT NULL DEFAULT 'APPROVED',
+    created_by BIGINT
 );
 
 CREATE TABLE test_cases (

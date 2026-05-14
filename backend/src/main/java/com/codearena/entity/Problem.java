@@ -36,4 +36,11 @@ public class Problem {
 
     @Column(name = "starter_code", columnDefinition = "TEXT")
     private String starterCode;
+
+    @Column(name = "status", nullable = false)
+    @Builder.Default
+    private String status = "APPROVED"; // PENDING, APPROVED, REJECTED
+
+    @Column(name = "created_by")
+    private Long createdBy; // user id of submitter; null for seeded problems
 }

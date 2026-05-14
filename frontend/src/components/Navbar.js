@@ -13,6 +13,10 @@ export default function Navbar() {
             </Link>
             <div className="flex gap-4 items-center">
                 <Link to="/problems" className="hover:text-emerald-400">Problems</Link>
+                {user && <Link to="/problems/new" className="hover:text-emerald-400">Submit Problem</Link>}
+                {user?.role === "ADMIN" && (
+                    <Link to="/admin/problems" className="hover:text-emerald-400 text-amber-400">Moderation</Link>
+                )}
                 {user && <Link to="/submissions" className="hover:text-emerald-400">Submissions</Link>}
                 {user && <Link to="/dashboard" className="hover:text-emerald-400">Dashboard</Link>}
                 {user ? (

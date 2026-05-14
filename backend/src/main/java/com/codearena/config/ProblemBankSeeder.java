@@ -49,6 +49,7 @@ public class ProblemBankSeeder implements ApplicationRunner {
                     .sampleInput(generated.tests.get(0).input)
                     .sampleOutput(generated.tests.get(0).expectedOutput)
                     .starterCode(generated.starterCode)
+                    .status("APPROVED")
                     .build());
 
             List<TestCase> testCases = generated.tests.stream()
@@ -795,11 +796,11 @@ public class ProblemBankSeeder implements ApplicationRunner {
 
     private GeneratedProblem generateReverseLinkedList(int variant) {
         List<SeedTestCase> tests = List.of(
-                arrayArrayResultCase(new int[]{1, 2, 3, 4, 5}, true, this::reverseArray),
-                arrayArrayResultCase(new int[]{1}, true, this::reverseArray),
-                arrayArrayResultCase(new int[]{variant, variant + 1}, false, this::reverseArray),
-                arrayArrayResultCase(new int[]{9, 8, 7, 6}, false, this::reverseArray),
-                arrayArrayResultCase(new int[]{5, 5, 4, 4, 3}, false, this::reverseArray));
+                arrayArrayResultCase(new int[] { 1, 2, 3, 4, 5 }, true, this::reverseArray),
+                arrayArrayResultCase(new int[] { 1 }, true, this::reverseArray),
+                arrayArrayResultCase(new int[] { variant, variant + 1 }, false, this::reverseArray),
+                arrayArrayResultCase(new int[] { 9, 8, 7, 6 }, false, this::reverseArray),
+                arrayArrayResultCase(new int[] { 5, 5, 4, 4, 3 }, false, this::reverseArray));
 
         return problem("Reverse Linked List " + pad(variant),
                 """
@@ -821,11 +822,11 @@ public class ProblemBankSeeder implements ApplicationRunner {
 
     private GeneratedProblem generateMiddleOfLinkedList(int variant) {
         List<SeedTestCase> tests = List.of(
-                arrayIntResultCase(new int[]{1, 2, 3, 4, 5}, true, this::middleNodeValue),
-                arrayIntResultCase(new int[]{1, 2, 3, 4, 5, 6}, true, this::middleNodeValue),
-                arrayIntResultCase(new int[]{variant}, false, this::middleNodeValue),
-                arrayIntResultCase(new int[]{9, 8}, false, this::middleNodeValue),
-                arrayIntResultCase(new int[]{4, 7, 1, 9, 2, 6, 8, 3}, false, this::middleNodeValue));
+                arrayIntResultCase(new int[] { 1, 2, 3, 4, 5 }, true, this::middleNodeValue),
+                arrayIntResultCase(new int[] { 1, 2, 3, 4, 5, 6 }, true, this::middleNodeValue),
+                arrayIntResultCase(new int[] { variant }, false, this::middleNodeValue),
+                arrayIntResultCase(new int[] { 9, 8 }, false, this::middleNodeValue),
+                arrayIntResultCase(new int[] { 4, 7, 1, 9, 2, 6, 8, 3 }, false, this::middleNodeValue));
 
         return problem("Middle of Linked List " + pad(variant),
                 """
@@ -848,11 +849,11 @@ public class ProblemBankSeeder implements ApplicationRunner {
 
     private GeneratedProblem generateMergeTwoSortedLists(int variant) {
         List<SeedTestCase> tests = List.of(
-                mergeListsCase(new int[]{1, 2, 4}, new int[]{1, 3, 4}, true),
-                mergeListsCase(new int[]{1, 2, 2 + variant}, new int[]{1, 1 + variant, 3 + variant}, true),
-                mergeListsCase(new int[]{1}, new int[]{}, false),
-                mergeListsCase(new int[]{}, new int[]{2, 5, 9}, false),
-                mergeListsCase(new int[]{-3, 0, 7}, new int[]{-2, 4, 8, 10}, false));
+                mergeListsCase(new int[] { 1, 2, 4 }, new int[] { 1, 3, 4 }, true),
+                mergeListsCase(new int[] { 1, 2, 2 + variant }, new int[] { 1, 1 + variant, 3 + variant }, true),
+                mergeListsCase(new int[] { 1 }, new int[] {}, false),
+                mergeListsCase(new int[] {}, new int[] { 2, 5, 9 }, false),
+                mergeListsCase(new int[] { -3, 0, 7 }, new int[] { -2, 4, 8, 10 }, false));
 
         return problem("Merge Two Sorted Lists " + pad(variant),
                 """
@@ -876,11 +877,11 @@ public class ProblemBankSeeder implements ApplicationRunner {
 
     private GeneratedProblem generateMaximumDepthBinaryTree(int variant) {
         List<SeedTestCase> tests = List.of(
-                treeIntCase(new String[]{"3", "9", "20", "null", "null", "15", "7"}, true, this::maxDepthTokens),
-                treeIntCase(new String[]{"1", "null", "2"}, true, this::maxDepthTokens),
-                treeIntCase(new String[]{String.valueOf(variant)}, false, this::maxDepthTokens),
-                treeIntCase(new String[]{"1", "2", "3", "4", "5", "null", "null"}, false, this::maxDepthTokens),
-                treeIntCase(new String[]{"1", "2", "null", "3", "null", "null", "null", "4"}, false,
+                treeIntCase(new String[] { "3", "9", "20", "null", "null", "15", "7" }, true, this::maxDepthTokens),
+                treeIntCase(new String[] { "1", "null", "2" }, true, this::maxDepthTokens),
+                treeIntCase(new String[] { String.valueOf(variant) }, false, this::maxDepthTokens),
+                treeIntCase(new String[] { "1", "2", "3", "4", "5", "null", "null" }, false, this::maxDepthTokens),
+                treeIntCase(new String[] { "1", "2", "null", "3", "null", "null", "null", "4" }, false,
                         this::maxDepthTokens));
 
         return problem("Maximum Depth of Binary Tree " + pad(variant),
@@ -903,11 +904,11 @@ public class ProblemBankSeeder implements ApplicationRunner {
 
     private GeneratedProblem generateBinaryTreeInorderTraversal(int variant) {
         List<SeedTestCase> tests = List.of(
-                treeArrayCase(new String[]{"1", "null", "2", "null", "null", "3"}, true, this::inorderTokens),
-                treeArrayCase(new String[]{"4", "2", "6", "1", "3", "5", "7"}, true, this::inorderTokens),
-                treeArrayCase(new String[]{String.valueOf(variant)}, false, this::inorderTokens),
-                treeArrayCase(new String[]{"5", "3", "8", "1", "4", "7", "9"}, false, this::inorderTokens),
-                treeArrayCase(new String[]{"2", "1", "3", "null", "null", "null", "4"}, false, this::inorderTokens));
+                treeArrayCase(new String[] { "1", "null", "2", "null", "null", "3" }, true, this::inorderTokens),
+                treeArrayCase(new String[] { "4", "2", "6", "1", "3", "5", "7" }, true, this::inorderTokens),
+                treeArrayCase(new String[] { String.valueOf(variant) }, false, this::inorderTokens),
+                treeArrayCase(new String[] { "5", "3", "8", "1", "4", "7", "9" }, false, this::inorderTokens),
+                treeArrayCase(new String[] { "2", "1", "3", "null", "null", "null", "4" }, false, this::inorderTokens));
 
         return problem("Binary Tree Inorder Traversal " + pad(variant),
                 """
@@ -929,11 +930,11 @@ public class ProblemBankSeeder implements ApplicationRunner {
 
     private GeneratedProblem generateSameTree(int variant) {
         List<SeedTestCase> tests = List.of(
-                sameTreeCase(new String[]{"1", "2", "3"}, new String[]{"1", "2", "3"}, true),
-                sameTreeCase(new String[]{"1", "2"}, new String[]{"1", "null", "2"}, true),
-                sameTreeCase(new String[]{String.valueOf(variant)}, new String[]{String.valueOf(variant)}, false),
-                sameTreeCase(new String[]{"5", "3", "7"}, new String[]{"5", "3", "8"}, false),
-                sameTreeCase(new String[]{"1", "2", "3", "4"}, new String[]{"1", "2", "3", "null", "4"}, false));
+                sameTreeCase(new String[] { "1", "2", "3" }, new String[] { "1", "2", "3" }, true),
+                sameTreeCase(new String[] { "1", "2" }, new String[] { "1", "null", "2" }, true),
+                sameTreeCase(new String[] { String.valueOf(variant) }, new String[] { String.valueOf(variant) }, false),
+                sameTreeCase(new String[] { "5", "3", "7" }, new String[] { "5", "3", "8" }, false),
+                sameTreeCase(new String[] { "1", "2", "3", "4" }, new String[] { "1", "2", "3", "null", "4" }, false));
 
         return problem("Same Tree " + pad(variant),
                 """
@@ -957,11 +958,11 @@ public class ProblemBankSeeder implements ApplicationRunner {
 
     private GeneratedProblem generateLastStoneWeight(int variant) {
         List<SeedTestCase> tests = List.of(
-                arrayIntResultCase(new int[]{2, 7, 4, 1, 8, 1}, true, this::lastStoneWeight),
-                arrayIntResultCase(new int[]{1}, true, this::lastStoneWeight),
-                arrayIntResultCase(new int[]{variant, variant}, false, this::lastStoneWeight),
-                arrayIntResultCase(new int[]{10, 4, 2, 10}, false, this::lastStoneWeight),
-                arrayIntResultCase(new int[]{9, 3, 2, 10, 7, 1}, false, this::lastStoneWeight));
+                arrayIntResultCase(new int[] { 2, 7, 4, 1, 8, 1 }, true, this::lastStoneWeight),
+                arrayIntResultCase(new int[] { 1 }, true, this::lastStoneWeight),
+                arrayIntResultCase(new int[] { variant, variant }, false, this::lastStoneWeight),
+                arrayIntResultCase(new int[] { 10, 4, 2, 10 }, false, this::lastStoneWeight),
+                arrayIntResultCase(new int[] { 9, 3, 2, 10, 7, 1 }, false, this::lastStoneWeight));
 
         return problem("Last Stone Weight " + pad(variant),
                 """
@@ -984,11 +985,11 @@ public class ProblemBankSeeder implements ApplicationRunner {
 
     private GeneratedProblem generateNumberOfIslands(int variant) {
         List<SeedTestCase> tests = List.of(
-                gridIntCase(new String[]{"11110", "11010", "11000", "00000"}, true, this::numberOfIslands),
-                gridIntCase(new String[]{"11000", "11000", "00100", "00011"}, true, this::numberOfIslands),
-                gridIntCase(new String[]{"1"}, false, this::numberOfIslands),
-                gridIntCase(new String[]{"101", "010", "101"}, false, this::numberOfIslands),
-                gridIntCase(new String[]{"111", "010", "1" + (variant % 2) + "1"}, false, this::numberOfIslands));
+                gridIntCase(new String[] { "11110", "11010", "11000", "00000" }, true, this::numberOfIslands),
+                gridIntCase(new String[] { "11000", "11000", "00100", "00011" }, true, this::numberOfIslands),
+                gridIntCase(new String[] { "1" }, false, this::numberOfIslands),
+                gridIntCase(new String[] { "101", "010", "101" }, false, this::numberOfIslands),
+                gridIntCase(new String[] { "111", "010", "1" + (variant % 2) + "1" }, false, this::numberOfIslands));
 
         return problem("Number of Islands " + pad(variant),
                 """

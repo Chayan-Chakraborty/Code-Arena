@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import api from "../api/axios";
+import { useAuth } from "../context/AuthContext";
 
 const DIFF_COLORS = {
     Easy: "text-emerald-400",
@@ -9,6 +10,7 @@ const DIFF_COLORS = {
 };
 
 export default function Problems() {
+    const { user } = useAuth();
     const [params, setParams] = useSearchParams();
     const topic = params.get("topic");
     const [problems, setProblems] = useState([]);
@@ -22,7 +24,7 @@ export default function Problems() {
                 const topics = [...new Set(r.data.map((problem) => problem.topic))].sort((a, b) => a.localeCompare(b));
                 setAllTopics(topics);
             })
-            .catch(() => {});
+            .catch(() => { });
     }, []);
 
     useEffect(() => {
@@ -37,9 +39,17 @@ export default function Problems() {
 
     return (
         <div className="p-8 max-w-5xl mx-auto">
-            <h1 className="text-3xl font-bold mb-2">
-                Problems {topic && <span className="text-emerald-400">/ {topic}</span>}
-            </h1>
+            <div className="flex items-start justify-between mb-2">
+                <h1 className="text-3xl font-bold">
+                    Problems {topic && <span className="text-emerald-400">/ {topic}</span>}
+                </h1>
+                {user && (
+                    <Link
+                        to="/problems/new"
+                        className="bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded text-sm font-semibold"
+                    >+ Submit a Problem</Link>
+                )}
+            </div>
             <p className="text-slate-400 mb-6">Pick a problem and start coding.</p>
 
             {allTopics.length > 0 && (

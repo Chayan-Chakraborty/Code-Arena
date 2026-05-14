@@ -3,6 +3,7 @@ package com.codearena.config;
 import com.codearena.security.JwtFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -40,8 +41,9 @@ public class SecurityConfig {
                 })
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**", "/h2-console/**",
-                                "/api/problems/**", "/api/problems", "/api/run")
+                        .requestMatchers("/api/auth/**", "/h2-console/**", "/api/run")
+                        .permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/problems", "/api/problems/*", "/api/problems/*/samples")
                         .permitAll()
                         .anyRequest().authenticated())
                 .headers(h -> h.frameOptions(f -> f.disable()))
